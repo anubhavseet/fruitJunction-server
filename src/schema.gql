@@ -1,0 +1,425 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+"""Data required to add an item to the shopping cart"""
+input AddToCartInput {
+  """ID of the product"""
+  productId: Int!
+
+  """Quantity of the product"""
+  quantity: Int! = 1
+}
+
+"""Saved delivery address"""
+type Address {
+  addressLine1: String!
+  addressLine2: String
+  city: String!
+  id: ID!
+  isDefault: Boolean!
+  label: String!
+  pincode: String!
+  state: String!
+}
+
+"""Response returned after successful authentication"""
+type AuthResponse {
+  message: String!
+  user: User!
+}
+
+"""Customer shopping cart"""
+type Cart {
+  createdAt: DateTime!
+  id: ID!
+  items: [CartItem!]!
+
+  """Total price of all items in cart"""
+  totalAmount: Float!
+
+  """Total count of units in cart"""
+  totalItems: Int!
+  updatedAt: DateTime!
+}
+
+"""An individual item within a shopping cart"""
+type CartItem {
+  id: ID!
+  price: Float!
+  product: Product!
+  quantity: Int!
+  subtotal: Float!
+}
+
+"""Data for adding a new delivery address"""
+input CreateAddressInput {
+  addressLine1: String!
+  addressLine2: String
+  city: String!
+  isDefault: Boolean = false
+  label: String!
+  pincode: String!
+  state: String!
+}
+
+"""Data required to place an order from the active cart"""
+input CreateOrderInput {
+  """Complete delivery address text"""
+  deliveryAddress: String!
+
+  """Optional delivery instructions or notes"""
+  notes: String
+
+  """Chosen payment method"""
+  paymentMethod: PaymentMethod! = RAZORPAY
+}
+
+"""Data required to create a new product"""
+input CreateProductInput {
+  """Category name"""
+  category: String!
+
+  """Product description"""
+  description: String
+
+  """Image asset path or URL"""
+  imageUrl: String
+
+  """In-stock status"""
+  inStock: Boolean = true
+
+  """Product title or name"""
+  name: String!
+
+  """Regular price"""
+  price: Float!
+
+  """Discounted sale price"""
+  salePrice: Float
+}
+
+"""Data required to register a new user"""
+input CreateUserInput {
+  email: String!
+  name: String!
+  password: String!
+  phoneNumber: Float!
+}
+
+"""System-wide summary metrics for Admin Dashboard"""
+type DashboardStats {
+  activeUsers: Int!
+  deliveredOrders: Int!
+  pendingOrders: Int!
+  totalOrders: Int!
+  totalProducts: Int!
+  totalRevenue: Float!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+"""Login credentials"""
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+type Mutation {
+  """Add a new delivery address"""
+  addAddress(input: CreateAddressInput!): Address!
+
+  """Add a product to the shopping cart"""
+  addToCart(input: AddToCartInput!): Cart!
+
+  """Clear all items from cart"""
+  clearCart: Cart!
+
+  """Create and place a new order from current cart"""
+  createOrder(input: CreateOrderInput!): Order!
+
+  """Create a Razorpay payment order for an existing order"""
+  createPaymentOrder(orderId: String!): PaymentOrderResponse!
+
+  """Create a new fruit or salad product (Admin only)"""
+  createProduct(createProductInput: CreateProductInput!): Product!
+
+  """Get an S3 presigned URL for direct image uploading"""
+  getPresignedUploadUrl(fileType: String!, filename: String!): PresignedUrlResponse!
+
+  """Login with email and password"""
+  login(input: LoginInput!): AuthResponse!
+
+  """Logout and clear auth cookies"""
+  logout: Boolean!
+
+  """Refresh access token"""
+  refreshToken: AuthResponse!
+
+  """Register a new user account"""
+  register(input: CreateUserInput!): AuthResponse!
+
+  """Remove a saved address"""
+  removeAddress(addressId: String!): Boolean!
+
+  """Remove an item from cart"""
+  removeCartItem(cartItemId: ID!): Cart!
+
+  """Delete a product by ID (Admin only)"""
+  removeProduct(id: ID!): Boolean!
+
+  """Update item quantity in cart"""
+  updateCartItem(input: UpdateCartItemInput!): Cart!
+
+  """Update status of an order (Admin only)"""
+  updateOrderStatus(input: UpdateOrderStatusInput!): Order!
+
+  """Update an existing product (Admin only)"""
+  updateProduct(updateProductInput: UpdateProductInput!): Product!
+
+  """Update current user profile"""
+  updateUser(input: UpdateUserInput!): User!
+
+  """Verify Razorpay payment signature after client payment completion"""
+  verifyPayment(input: VerifyPaymentInput!): VerifyPaymentResponse!
+}
+
+"""Customer order entity"""
+type Order {
+  createdAt: DateTime!
+  deliveryAddress: String!
+  deliveryFee: Float!
+  id: ID!
+  items: [OrderItem!]!
+  notes: String
+  paymentId: String
+  paymentMethod: PaymentMethod!
+  paymentStatus: PaymentStatus!
+  razorpayOrderId: String
+  razorpayPaymentId: String
+  status: OrderStatus!
+  totalAmount: Float!
+  updatedAt: DateTime!
+  user: User!
+}
+
+"""An item belonging to an order"""
+type OrderItem {
+  id: ID!
+  product: Product
+  productName: String!
+  quantity: Int!
+  subtotal: Float!
+  unitPrice: Float!
+}
+
+"""Current order fulfillment status"""
+enum OrderStatus {
+  CANCELLED
+  CONFIRMED
+  DELIVERED
+  OUT_FOR_DELIVERY
+  PENDING
+  PREPARING
+}
+
+"""Payment transaction record"""
+type Payment {
+  amount: Float!
+  createdAt: DateTime!
+  currency: String!
+  id: ID!
+  orderId: ID!
+  razorpayOrderId: String!
+  razorpayPaymentId: String
+  status: PaymentStatus!
+  updatedAt: DateTime!
+}
+
+"""Payment method chosen for order"""
+enum PaymentMethod {
+  CASH_ON_DELIVERY
+  RAZORPAY
+}
+
+"""Order response returned to frontend to trigger Razorpay checkout modal"""
+type PaymentOrderResponse {
+  """Amount in paise"""
+  amount: Float!
+  currency: String!
+
+  """Razorpay Public Key ID"""
+  keyId: String!
+  razorpayOrderId: String!
+}
+
+"""Payment status of the order"""
+enum PaymentStatus {
+  FAILED
+  PAID
+  PENDING
+  REFUNDED
+}
+
+"""Presigned S3 upload URL response"""
+type PresignedUrlResponse {
+  """Publicly readable asset URL"""
+  fileUrl: String!
+
+  """Direct S3 PUT URL"""
+  uploadUrl: String!
+}
+
+"""Fruit and salad product item"""
+type Product {
+  """Category (e.g. Fresh Mixed Fruit Salad, Healthy Detox Juices)"""
+  category: String!
+  createdAt: DateTime!
+
+  """Detailed description"""
+  description: String
+
+  """Unique product ID"""
+  id: ID!
+
+  """Image asset path or URL"""
+  imageUrl: String
+
+  """Stock availability status"""
+  inStock: Boolean!
+
+  """Name of the product"""
+  name: String!
+
+  """Regular price in currency units"""
+  price: Float!
+
+  """Discounted sale price"""
+  salePrice: Float
+  updatedAt: DateTime!
+}
+
+type Query {
+  """Get all system orders (Admin only)"""
+  allOrders: [Order!]!
+
+  """Get all payment transactions (Admin only)"""
+  allPayments: [Payment!]!
+
+  """Get the current user shopping cart"""
+  cart: Cart!
+
+  """Get high-level summary metrics for admin dashboard"""
+  dashboardStats: DashboardStats!
+
+  """Get the currently authenticated user"""
+  me: User!
+
+  """Get all saved addresses"""
+  myAddresses: [Address!]!
+
+  """Get orders of the authenticated user"""
+  myOrders: [Order!]!
+
+  """Get order details by ID"""
+  order(id: ID!): Order!
+
+  """Retrieve a single product by ID"""
+  product(id: ID!): Product!
+
+  """Retrieve all products with optional category filter"""
+  products(category: String): [Product!]!
+
+  """Get all users (admin only)"""
+  users: [User!]!
+}
+
+"""Data required to update quantity of an item in the cart"""
+input UpdateCartItemInput {
+  """ID of the cart item"""
+  cartItemId: ID!
+
+  """New quantity (set to 0 to remove item)"""
+  quantity: Int!
+}
+
+"""Data required for admin to update order or payment status"""
+input UpdateOrderStatusInput {
+  orderId: ID!
+  paymentStatus: PaymentStatus
+  status: OrderStatus
+}
+
+"""Data for updating an existing product"""
+input UpdateProductInput {
+  """Category name"""
+  category: String
+
+  """Product description"""
+  description: String
+
+  """ID of the product to update"""
+  id: ID!
+
+  """Image asset path or URL"""
+  imageUrl: String
+
+  """In-stock status"""
+  inStock: Boolean = true
+
+  """Product title or name"""
+  name: String
+
+  """Regular price"""
+  price: Float
+
+  """Discounted sale price"""
+  salePrice: Float
+}
+
+"""Data for updating an existing user profile"""
+input UpdateUserInput {
+  email: String
+  name: String
+  password: String
+  phoneNumber: Float
+}
+
+"""User account entity"""
+type User {
+  addresses: [Address!]
+  createdAt: DateTime!
+  email: String!
+  isActive: Boolean!
+  name: String!
+  phoneNumber: Float!
+  role: UserRole!
+  updatedAt: DateTime!
+  userId: ID!
+}
+
+"""User role in the system"""
+enum UserRole {
+  ADMIN
+  CUSTOMER
+}
+
+"""
+Data returned by Razorpay checkout modal upon successful customer payment
+"""
+input VerifyPaymentInput {
+  orderId: String!
+  razorpayOrderId: String!
+  razorpayPaymentId: String!
+  razorpaySignature: String!
+}
+
+"""Response returned after payment verification"""
+type VerifyPaymentResponse {
+  orderId: String!
+  paymentId: String
+  success: Boolean!
+}
