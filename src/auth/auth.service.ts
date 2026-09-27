@@ -69,18 +69,19 @@ export class AuthService {
   }
 
   logout(res: Response): boolean {
-    res.clearCookie('access_token', {
+    const isProduction = this.configService.get('NODE_ENV') === 'production';
+    const cookieDomain = this.configService.get('COOKIE_DOMAIN') || (isProduction ? '.fruitjunction.in' : undefined);
+
+    const cookieOptions = {
       httpOnly: true,
-      secure: this.configService.get('NODE_ENV') === 'production',
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: (isProduction ? 'none' : 'lax') as 'none' | 'lax',
+      domain: cookieDomain,
       path: '/',
-    });
-    res.clearCookie('refresh_token', {
-      httpOnly: true,
-      secure: this.configService.get('NODE_ENV') === 'production',
-      sameSite: 'lax',
-      path: '/',
-    });
+    };
+
+    res.clearCookie('access_token', cookieOptions);
+    res.clearCookie('refresh_token', cookieOptions);
     return true;
   }
 
@@ -102,11 +103,13 @@ export class AuthService {
     });
 
     const isProduction = this.configService.get('NODE_ENV') === 'production';
+    const cookieDomain = this.configService.get('COOKIE_DOMAIN') || (isProduction ? '.fruitjunction.in' : undefined);
 
     res.cookie('access_token', accessToken, {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'lax',
+      sameSite: (isProduction ? 'none' : 'lax') as 'none' | 'lax',
+      domain: cookieDomain,
       maxAge: 15 * 60 * 1000, // 15 minutes
       path: '/',
     });
@@ -114,7 +117,8 @@ export class AuthService {
     res.cookie('refresh_token', refreshToken, {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'lax',
+      sameSite: (isProduction ? 'none' : 'lax') as 'none' | 'lax',
+      domain: cookieDomain,
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: '/',
     });
