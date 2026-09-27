@@ -1,0 +1,57 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            echo "==> [CI/CD] Deploying updates to Fruit Junction Server..."
+
+            # Ensure Node, npm, and PM2 paths are loaded in non-interactive shell
+            export PATH=$PATH:/usr/bin:/usr/local/bin:$HOME/.npm-global/bin
+            [ -s "$HOME/.nvm/nvm.sh" ] && \. "$HOME/.nvm/nvm.sh"
+
+            # Sanity check versions
+            echo "Node version: $(node -v)"
+            echo "NPM version: $(npm -v)"
+
+            # Navigate to project directory
+            cd /home/ubuntu/fruitJunction-server
+
+            # Pull latest changes from main branch cleanly
+            git fetch origin main
+            git reset --hard origin/main
+
+            # Install dependencies (including devDependencies required for nest build)
+            npm install --include=dev
+
+            # Build the production NestJS bundle
+            npm run build
+
+            # Zero-downtime reload with PM2 (or start if not already running)
+            if pm2 describe fruit-junction-server > /dev/null 2>&1; then
+              echo "==> Reloading running PM2 process..."
+              pm2 reload fruit-junction-server --update-env
+            else
+              echo "==> Starting new PM2 process..."
+              pm2 start dist/main.js --name "fruit-junction-server"
+            fi
+
+            # Save PM2 process list so it survives reboots
+            pm2 save
+
+            echo "==> [CI/CD] Deployment completed successfully!"
